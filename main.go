@@ -2,13 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 )
-
-type Todo struct {
-	Todos []TodoContent
-}
 
 type TodoContent struct {
 	Name string `json:"name"`
@@ -31,38 +28,56 @@ func readExistingData(filename string) ([]TodoContent, error) {
 	return todos,err 
 }
 
+func saveTodo(filename string, todoData []byte) error  {
+	return os.WriteFile(filename, todoData, 0644)
+}
+
 func main() {
-	// task := flag.String("add", "[Empty]", "Add a task")
-	// done := flag.Bool("done", false, "Mark a task")
+	task := flag.String("add", "[Empty]", "Add a task")
+	done := flag.Bool("done", false, "Mark a task")
+	filename := "todos.json"
+	flag.Parse()
 
-	// flag.Parse()
-
-	// nameJson, err := json.MarshalIndent(TodoContent{Name: *task, Done: *done}, "", " ")
-
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// file, err := os.Create("todos.json")
-
-	// defer file.Close()
-
-	var todo []TodoContent 
-
-	todo, err := readExistingData("todos.json")
+	taskByte, err := json.MarshalIndent(TodoContent{Name: *task, Done: *done}, "", " ")
 
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(todo[0])
+	// this prints the json object
+	// fmt.Println(string(taskByte))
+	
 
-	// _, err = file.Write(nameJson)
+	// err = saveTodo(filename, taskByte)
 
-	// if err != nil {
-	// 	panic(err)
-	// }
+	todos, err := readExistingData(filename)
 
-	// fmt.Println("Task added: ", *task)
-	// fmt.Println(string(nameJson))
+	if err != nil {
+		panic(err)
+	}
+
+	var inputTodo TodoContent
+	err = json.Unmarshal(taskByte, &inputTodo)
+
+	if err != nil {
+		panic(err)
+	}
+
+	// fmt.Println(newTodo)
+	fmt.Println(todos)
+
+	newTodoSlice := append(todos, inputTodo)
+	
+	newTodoByte, err := json.MarshalIndent(newTodoSlice, "", " ")
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = saveTodo(filename, newTodoByte)
+
+	if err != nil {
+		panic(err)
+	}
+
 }
