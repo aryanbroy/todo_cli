@@ -7,7 +7,9 @@ import (
 	"os"
 )
 
+// create an auto increment id field
 type TodoContent struct {
+	Id int `json:"id"`
 	Name string `json:"name"`
 	Done bool `json:"done"`
 }
@@ -33,8 +35,10 @@ func saveTodo(filename string, todoData []byte) error  {
 }
 
 func main() {
+
 	task := flag.String("add", "[Empty]", "Add a task")
 	done := flag.Bool("done", false, "Mark a task")
+
 	filename := "todos.json"
 	flag.Parse()
 
@@ -44,16 +48,16 @@ func main() {
 		panic(err)
 	}
 
-	// this prints the json object
-	// fmt.Println(string(taskByte))
-	
-
-	// err = saveTodo(filename, taskByte)
-
 	todos, err := readExistingData(filename)
 
 	if err != nil {
-		panic(err)
+		taskByte, error := json.MarshalIndent([]TodoContent{{Id: 1, Name: *task, Done: *done}}, "", " ")
+		if error != nil {
+			fmt.Println("Error while creating first task")
+			return
+		}
+		os.WriteFile(filename, taskByte, 0644)
+		return
 	}
 
 	var inputTodo TodoContent
@@ -64,7 +68,9 @@ func main() {
 	}
 
 	// fmt.Println(newTodo)
-	fmt.Println(todos)
+	// fmt.Println(todos)
+
+	inputTodo.Id = len(todos) + 1
 
 	newTodoSlice := append(todos, inputTodo)
 	
