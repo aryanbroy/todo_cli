@@ -62,12 +62,40 @@ func deleteTodo(todos []TodoContent, indexToDel int, filename string) {
 
 }
 
+// implement change task status functionality
+func markDone(todos []TodoContent, idx int, filename string) {
+	var idPresent bool
+	for i := range todos {  // here i acts as a reference to the original data, whereas item in (i, item := range todos) is just a copy
+		if todos[i].Id == idx {
+			todos[i].Done = true
+			idPresent = true
+			break
+		}
+	}
+
+	if !idPresent {
+		fmt.Println("No such task to mark done...")
+		return
+	}
+	todosByte, err := json.MarshalIndent(todos, "", " ")
+	if err != nil {
+		panic(err)
+	}
+
+	err = saveTodo(filename, todosByte)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+
 func main() {
 
 	task := flag.String("add", "[Empty]", "Add a task")
-	done := flag.Bool("done", false, "Mark a task")
-	display := flag.Bool("display", false, "Display todo list")
+	display := flag.Bool("show", false, "Display todo list")
 	deleteTaskId := flag.Int("del", -1, "Delete a specific task using its id")
+	markDoneId := flag.Int("done", -1, "Mark a task as complete")
 
 	filename := "todos.json"
 	flag.Parse()
@@ -79,6 +107,12 @@ func main() {
 		fmt.Println("error happening here")
 		panic(err)
 	}
+
+	if *markDoneId > 0 {
+		markDone(todos, *markDoneId, filename)
+		return 
+	}
+
 
 	if *deleteTaskId > 0 {
 		indexToDel := -1
@@ -107,10 +141,10 @@ func main() {
 		return
 	}
 
-	taskByte, err := json.MarshalIndent(TodoContent{Name: *task, Done: *done}, "", " ")	
+	taskByte, err := json.MarshalIndent(TodoContent{Name: *task, Done: false}, "", " ")	
 
 	if err != nil {
-		taskByte, error := json.MarshalIndent([]TodoContent{{Id: 1, Name: *task, Done: *done}}, "", " ")
+		taskByte, error := json.MarshalIndent([]TodoContent{{Id: 1, Name: *task, Done: false}}, "", " ")
 		if error != nil {
 			fmt.Println("Error while creating first task")
 			return
