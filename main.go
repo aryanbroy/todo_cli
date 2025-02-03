@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 // create an auto increment id field
@@ -38,9 +40,29 @@ func main() {
 
 	task := flag.String("add", "[Empty]", "Add a task")
 	done := flag.Bool("done", false, "Mark a task")
+	display := flag.Bool("display", false, "Display todo list")
 
 	filename := "todos.json"
 	flag.Parse()
+
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"ID", "NAME", "ISDONE"})
+
+	if *display {
+		var todoList []TodoContent
+		todoList, err := readExistingData(filename)
+		if err != nil {
+			fmt.Println("Error displaying the list of todos!")
+			panic(err)
+		}
+		for _, item := range todoList {
+			t.AppendRow(table.Row{item.Id, item.Name, item.Done})
+			// fmt.Println("Id: ", item.Id, "Name: ", item.Name, "IsDone: ", item.Done)
+		}
+		t.Render()
+		return
+	}
 
 	taskByte, err := json.MarshalIndent(TodoContent{Name: *task, Done: *done}, "", " ")
 
@@ -85,5 +107,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 }
