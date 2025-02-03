@@ -36,6 +36,34 @@ func saveTodo(filename string, todoData []byte) error  {
 	return os.WriteFile(filename, todoData, 0644)
 }
 
+func displayTodo(t table.Writer, todos []TodoContent) {
+	for _, item := range todos {
+		t.AppendRow(table.Row{item.Id, item.Name, func () string {
+			if item.Done {
+				return "Done"
+			} else {
+				return "Pending"
+			}
+		}()})
+	}
+	t.Render()
+}
+
+func deleteTodo(todos []TodoContent, indexToDel int, filename string) {
+	todos = append(todos[ :indexToDel], todos[indexToDel + 1 : ]...)
+	byteSlice, err := json.MarshalIndent(todos, "", " ")	
+	if err != nil {
+		fmt.Println("Error marshalling todos...")
+		panic(err)
+	}
+	fmt.Println(string(byteSlice))
+	err  = saveTodo(filename, byteSlice)
+	if err != nil {
+		panic(err)
+	}
+
+}
+
 func main() {
 
 	task := flag.String("add", "[Empty]", "Add a task")
@@ -48,8 +76,10 @@ func main() {
 
 	var todos []TodoContent
 	todos, err := readExistingData(filename)
+	// fmt.Println(todos)
 
 	if err != nil {
+		fmt.Println("error happening here")
 		panic(err)
 	}
 
@@ -66,32 +96,17 @@ func main() {
 			fmt.Println("No such task to delete...")
 			return
 		}
-		todos = append(todos[ :indexToDel], todos[indexToDel + 1 : ]...)
-		byteSlice := []byte{}	
-		for _, item := range todos {
-			itemBytes, err := json.Marshal(item)	
-			if err != nil {
-				panic(err)
-			}
-			byteSlice = append(byteSlice, itemBytes...)
-		}
-		err := saveTodo(filename, byteSlice)
-		if err != nil {
-			panic(err)
-		}
-		// fmt.Println(todos)
+		
+		deleteTodo(todos, indexToDel, filename)	
 		return
 	}
 
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"ID", "NAME", "ISDONE"})
+	t.AppendHeader(table.Row{"ID", "NAME", "STATUS"})
 
 	if *display {	
-		for _, item := range todos {
-			t.AppendRow(table.Row{item.Id, item.Name, item.Done})
-		}
-		t.Render()
+		displayTodo(t, todos)	
 		return
 	}
 
@@ -113,9 +128,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	// fmt.Println(newTodo)
-	// fmt.Println(todos)
 
 	inputTodo.Id = len(todos) + 1
 
