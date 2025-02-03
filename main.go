@@ -9,7 +9,6 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
-// create an auto increment id field
 type TodoContent struct {
 	Id int `json:"id"`
 	Name string `json:"name"`
@@ -56,7 +55,6 @@ func deleteTodo(todos []TodoContent, indexToDel int, filename string) {
 		fmt.Println("Error marshalling todos...")
 		panic(err)
 	}
-	fmt.Println(string(byteSlice))
 	err  = saveTodo(filename, byteSlice)
 	if err != nil {
 		panic(err)
@@ -76,7 +74,6 @@ func main() {
 
 	var todos []TodoContent
 	todos, err := readExistingData(filename)
-	// fmt.Println(todos)
 
 	if err != nil {
 		fmt.Println("error happening here")
